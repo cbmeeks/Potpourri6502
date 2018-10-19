@@ -79,7 +79,7 @@
 ;                   |                                                |         |
 ;-------------------+------------------------------------------------+---------|
 ;                   |                                                |         |
-; Read Data frm RAM |  Read data from internal RAM (DDRAM/CGRAM).    |  43 µs  |
+; Read Data frm RAM | Read data from internal RAM (DDRAM/CGRAM).     |  43 µs  |
 ;                   |                                                |         |
 ;===============================================================================
 
@@ -87,12 +87,23 @@
 
 ;------------------------------------------------------------------------------
 ;       Initialize the LCD module
+;       Notice we're initializing the module three times.  It's been mentioned
+;       that this is a good practice due to experience by seasoned coders
+;       who have run into this before.
+;       http://wilsonminesco.com/6502primer/LCDcode.asm
 ;------------------------------------------------------------------------------
 LCD_INIT:
         JSR     DELAY1          ; Allow some time for the LCD module to warm up
         JSR     DELAY1
         JSR     LCD_CLEAR
         JSR     LCD_SET_DISPLAY_ON
+        JSR     DELAY1
+        JSR     LCD_CLEAR
+        JSR     LCD_SET_DISPLAY_ON
+        JSR     DELAY1
+        JSR     LCD_CLEAR
+        JSR     LCD_SET_DISPLAY_ON
+        JSR     DELAY1
         RTS
 
 
