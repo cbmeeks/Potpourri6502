@@ -42,9 +42,26 @@ INITS:
 
         JSR     LCD_INIT
 
-        LDX     #<MSG
-        LDY     #>MSG
+        LDX     #<LINE1
+        LDY     #>LINE1
         JSR     PrintString
+
+        LDX     #<LINE3
+        LDY     #>LINE3
+        JSR     PrintString
+
+        LDA     #$40
+        JSR     LCD_SET_DRAM_ADDRESS
+
+        LDX     #<LINE2
+        LDY     #>LINE2
+        JSR     PrintString
+
+        LDX     #<LINE4
+        LDY     #>LINE4
+        JSR     PrintString
+
+
 
         JMP     MAIN
 
@@ -65,9 +82,14 @@ WriteLCD:
         JSR     LCD_WRITE
         RTS
 
-MSG:
-        .byte "== Potpourri6502 ==", 0
-
+LINE1:
+        .byte "*  Potpourri 6502  *", 0
+LINE2:
+        .byte "********************", 0
+LINE3:
+        .byte "Main Menu:          ", 0
+LINE4:
+        .byte "A> MONITOR  B> BASIC", 0
 
 ;------------------------------------------------------------------------------
 ;       Startup Vectors
