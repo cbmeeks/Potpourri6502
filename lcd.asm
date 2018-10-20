@@ -97,12 +97,8 @@ LCD_INIT:
         JSR     DELAY1
         JSR     LCD_CLEAR
         JSR     LCD_SET_DISPLAY_ON
+        JSR     LCD_SET_TWO_LINE_MODE
         JSR     DELAY1
-        JSR     LCD_CLEAR
-        JSR     LCD_SET_DISPLAY_ON
-        JSR     DELAY1
-        JSR     LCD_CLEAR
-        JSR     LCD_SET_DISPLAY_ON
         JSR     DELAY1
         RTS
 
@@ -122,6 +118,7 @@ LCD_INIT:
 LCD_CLEAR:
         LDA     #%00000001
         STA     PA
+        JSR     LCD_CLR_RS
         JSR     LCD_TOGGLE_EN
         RTS
 
@@ -147,9 +144,9 @@ LCD_CLEAR:
 ;               When B = “0”, blink is off.
 ;------------------------------------------------------------------------------
 LCD_SET_DISPLAY_ON:
-        LDA     PA
-        ORA     #%00001111
+        LDA     #%00001100
         STA     PA
+        JSR     LCD_CLR_RS
         JSR     LCD_TOGGLE_EN
         RTS
 
@@ -166,9 +163,9 @@ LCD_SET_DISPLAY_ON:
 ;       Contents of DDRAM does not change.
 ;------------------------------------------------------------------------------
 LCD_RETURN_HOME:
-        LDA     PA
-        ORA     #%00000010
+        LDA     #%00000010
         STA     PA
+        JSR     LCD_CLR_RS
         JSR     LCD_TOGGLE_EN
         RTS
 
@@ -216,9 +213,84 @@ LCD_TOGGLE_EN:
 ;------------------------------------------------------------------------------
 LCD_WRITE:
 ;       Prepare for write...set RS to 1
+        JSR     LCD_SET_RS
+        JSR     LCD_TOGGLE_EN
+
+        RTS
+
+;------------------------------------------------------------------------------
+;       Name:           LCD_CLR_RS
+;       Desc:           Clear the RS bit of the LCD module
+;       Destroys:       A
+;------------------------------------------------------------------------------
+LCD_CLR_RS:
+        LDA     PB
+        AND     #%11111101
+        STA     PB
+        RTS
+
+;------------------------------------------------------------------------------
+;       Name:           LCD_SET_RS
+;       Desc:           Set the RS bit of the LCD module
+;       Destroys:       A
+;------------------------------------------------------------------------------
+LCD_SET_RS:
         LDA     PB
         ORA     #%00000010
         STA     PB
+        RTS
+
+
+;------------------------------------------------------------------------------
+;       Name:           LCD_SET_TWO_LINE_MODE
+;       Desc:           Enable two line mode
+;       Destroys:       A
+;
+;       RS  R/W DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0
+;       === === === === === === === === === ===
+;        0   0   0   0   1   DL  N   F   x   x
+;
+;       DL : Interface data length control bit
+;           When DL = “1”, it means 8-bit bus mode with MPU.
+;           When DL = “0”, it means 4-bit bus mode with MPU. 
+;           So to speak, DL is a signal to select 8-bit or 4-bit bus mode.
+;           When 4-bit bus mode, it needs to transfer 4-bit data in two parts.
+;       N : Display line number control bit
+;           When N = “0”, it means 1-line display mode.
+;           When N = “1”, 2-line display mode is set.
+;       F : Display font type control bit
+;           When F = “0”, 5 ´ 7 dots format display mode
+;           When F = “1”, 5 ´ 10 dots format display mode
+;------------------------------------------------------------------------------
+LCD_SET_TWO_LINE_MODE:
+        LDA     #%00111000
+        STA     PA
+        JSR     LCD_CLR_RS
+        JSR     LCD_TOGGLE_EN
+
+        RTS
+
+
+;------------------------------------------------------------------------------
+;       Name:           LCD_SET_DRAM_ADDRESS
+;       Desc:           Sets the address of the DRAM for writing.
+;                       Set A to the address you want.
+;       Destroys:       
+;
+;       RS  R/W DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0
+;       === === === === === === === === === ===
+;        0   0   1  AC6 AC5 AC4 AC3 AC2 AC1 AC0
+;
+;       Set DDRAM address to AC.
+;       This instruction makes DDRAM data available from MPU.
+;       When in 1-line display mode (N = 0), DDRAM address is from $00 to $4F.
+;       In 2-line display mode (N = 1), DDRAM address in the 1st line is from 
+;       $00 to $27, and DDRAM address in the 2nd line is from $40 to $67.
+;------------------------------------------------------------------------------
+LCD_SET_DRAM_ADDRESS:
+        ORA     #%10000000
+        STA     PA
+        JSR     LCD_CLR_RS
         JSR     LCD_TOGGLE_EN
 
         RTS
