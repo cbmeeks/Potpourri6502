@@ -1,10 +1,10 @@
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 ;       At the moment, the LCD is connected as:
 ;               DB7:0   =       PA7:0
 ;               RS      =       PB1
 ;               EN      =       PB0
 ;       TODO:   Convert to 4 bit mode and free up four pins
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 .segment "LCD"
 
 ;===============================================================================
@@ -85,13 +85,9 @@
 
 
 
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 ;       Initialize the LCD module
-;       Notice we're initializing the module three times.  It's been mentioned
-;       that this is a good practice due to experience by seasoned coders
-;       who have run into this before.
-;       http://wilsonminesco.com/6502primer/LCDcode.asm
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 LCD_INIT:
         JSR     DELAY1          ; Allow some time for the LCD module to warm up
         JSR     DELAY1
@@ -103,7 +99,7 @@ LCD_INIT:
         RTS
 
 
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 ;       Clear Display
 ;       RS  R/W DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0
 ;       === === === === === === === === === ===
@@ -114,7 +110,7 @@ LCD_INIT:
 ;       (address counter). Return cursor to original status, namely, bring the
 ;       cursor to the left edge on first line of the display. Make entry mode 
 ;       increment (I/D = "1")
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 LCD_CLEAR:
         LDA     #%00000001
         STA     PA
@@ -122,7 +118,7 @@ LCD_CLEAR:
         JSR     LCD_TOGGLE_EN
         RTS
 
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 ;       Display ON/OFF
 ;       RS  R/W DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0
 ;       === === === === === === === === === ===
@@ -142,16 +138,16 @@ LCD_CLEAR:
 ;               between all the “1” data and display characters at the cursor 
 ;               position.
 ;               When B = “0”, blink is off.
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 LCD_SET_DISPLAY_ON:
-        LDA     #%00001100
+        LDA     #%00001111
         STA     PA
         JSR     LCD_CLR_RS
         JSR     LCD_TOGGLE_EN
         RTS
 
 
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 ;       Return Home
 ;       RS  R/W DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0
 ;       === === === === === === === === === ===
@@ -161,7 +157,7 @@ LCD_SET_DISPLAY_ON:
 ;       to "00H" in the address counter.  Return cursor to its original site 
 ;       and return display to its original status, if shifted. 
 ;       Contents of DDRAM does not change.
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 LCD_RETURN_HOME:
         LDA     #%00000010
         STA     PA
@@ -170,11 +166,11 @@ LCD_RETURN_HOME:
         RTS
 
 
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 ;       Name:           LCD_TOGGLE_EN
 ;       Desc:           Toggles PB0 (the LCD EN pin) with a delay in between
-;       Destroys:       Nothing
-;------------------------------------------------------------------------------
+;       Destroys:       A
+;-------------------------------------------------------------------------------
 LCD_TOGGLE_EN:
         JSR     DELAY1
         PHA
@@ -198,7 +194,7 @@ LCD_TOGGLE_EN:
         RTS
 
 
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 ;       Write data to RAM
 ;       RS  R/W DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0
 ;       === === === === === === === === === ===
@@ -210,30 +206,31 @@ LCD_TOGGLE_EN:
 ;       RAM set instruction can also determine the AC direction to RAM.
 ;       After write operation, the address is automatically increased/decreased
 ;       by 1, according to the entry mode.
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 LCD_WRITE:
 ;       Prepare for write...set RS to 1
+        PHA                     ; Push A to stack
         JSR     LCD_SET_RS
         JSR     LCD_TOGGLE_EN
-
+        PLA                     ; Restore A
         RTS
 
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 ;       Name:           LCD_CLR_RS
 ;       Desc:           Clear the RS bit of the LCD module
 ;       Destroys:       A
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 LCD_CLR_RS:
         LDA     PB
         AND     #%11111101
         STA     PB
         RTS
 
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 ;       Name:           LCD_SET_RS
 ;       Desc:           Set the RS bit of the LCD module
 ;       Destroys:       A
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 LCD_SET_RS:
         LDA     PB
         ORA     #%00000010
@@ -241,7 +238,7 @@ LCD_SET_RS:
         RTS
 
 
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 ;       Name:           LCD_SET_TWO_LINE_MODE
 ;       Desc:           Enable two line mode
 ;       Destroys:       A
@@ -261,7 +258,7 @@ LCD_SET_RS:
 ;       F : Display font type control bit
 ;           When F = “0”, 5 ´ 7 dots format display mode
 ;           When F = “1”, 5 ´ 10 dots format display mode
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 LCD_SET_TWO_LINE_MODE:
         LDA     #%00111000
         STA     PA
@@ -271,7 +268,7 @@ LCD_SET_TWO_LINE_MODE:
         RTS
 
 
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 ;       Name:           LCD_SET_DRAM_ADDRESS
 ;       Desc:           Sets the address of the DRAM for writing.
 ;                       Set A to the address you want.
@@ -286,7 +283,7 @@ LCD_SET_TWO_LINE_MODE:
 ;       When in 1-line display mode (N = 0), DDRAM address is from $00 to $4F.
 ;       In 2-line display mode (N = 1), DDRAM address in the 1st line is from 
 ;       $00 to $27, and DDRAM address in the 2nd line is from $40 to $67.
-;------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 LCD_SET_DRAM_ADDRESS:
         ORA     #%10000000
         STA     PA
